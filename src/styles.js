@@ -9,6 +9,7 @@ export const shadow = '#37465B'
 export const dark = '#212B38'
 export const light = '#f2f4ec'
 export const grey = '#e6e5e5'
+export const danger = '#c44565'
 
 export const styles = StyleSheet.create({    
     container:{

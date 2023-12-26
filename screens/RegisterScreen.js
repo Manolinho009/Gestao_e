@@ -1,10 +1,11 @@
 import React, { Component, useState } from 'react'
-import { Text, StyleSheet, View, TextInput, Pressable, Image, ScrollView } from 'react-native'
+import { Text, StyleSheet, View, TextInput, Pressable, Image, ScrollView, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
 import { styles } from '../src/styles'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
-import { auth } from '../firebase_config'
+import { auth, db } from '../firebase_config'
+import { addDoc, collection } from 'firebase/firestore'
 
 
 
@@ -44,10 +45,23 @@ const RegisterScreen  = () => {
                 // Profile updated!
                 // ...
                 console.log("Deu Bom");
+
+
+                addDoc(collection(db, 'usuarios'), {
+                    usuario : nome,
+                    userId: user.uid,
+                }).then(() => {
+                  console.log('Deu Bomm');
+                }).catch((err) => {
+                  // console.log(err);
+                });
+
+
             }).catch((error) => {
                 console.log(error);
                 // An error occurred
                 // ...
+                
               });
 
 
@@ -103,12 +117,12 @@ const RegisterScreen  = () => {
             />
 
             <View style={styles.buttonGroup}>
-                <Pressable
+                <TouchableOpacity
                     style={styles.buttonSuccess}
                     onPress={handleSignUp}
                 >
                     <Text style={styles.buttonSuccess.text}>Salvar</Text>
-                </Pressable>
+                </TouchableOpacity>
             </View>
         </View>
       </ScrollView>

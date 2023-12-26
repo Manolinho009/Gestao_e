@@ -1,11 +1,12 @@
 import React, { Component, useEffect, useState } from 'react'
-import { Text, StyleSheet, View, TextInput, Pressable, Image } from 'react-native'
+import { Text, StyleSheet, View, TextInput, Pressable, Image, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
 import { styles } from '../src/styles'
 import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth'
 
 import { auth } from '../firebase_config'
+import userClass, { storeUser } from '../src/userClass'
 
 
 const LoginScreen = () => {
@@ -30,8 +31,10 @@ const LoginScreen = () => {
         signInWithEmailAndPassword(auth, email, password)
          .then(userCredentials => {
              const user = userCredentials.user;
+
+             storeUser(JSON.stringify(user))
              console.log("LOGOU" , user);
-             // navigation.navigate("Home")
+             navigation.navigate("Home")
          })
          .catch(err => {
              alert(err.message)
@@ -73,18 +76,18 @@ const LoginScreen = () => {
         />
 
         <View style={styles.buttonGroup}>
-            <Pressable
+            <TouchableOpacity
                 style={styles.buttonSuccessOutlined}
                 onPress={goRegister}
             >
                 <Text style={styles.buttonSuccessOutlined.text}>Registrar</Text>
-            </Pressable>
-            <Pressable
+            </TouchableOpacity>
+            <TouchableOpacity
                 style={styles.buttonSuccess}
                 onPress={handleLogin}
             >
                 <Text style={styles.buttonSuccess.text}>Login</Text>
-            </Pressable>
+            </TouchableOpacity>
         </View>
       </View>
     )

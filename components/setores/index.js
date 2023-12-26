@@ -8,9 +8,9 @@ import CardHome from '../card';
 
 
 import { collections, doc, getDoc, collection, query, where, getDocs , setDoc, addDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../../firebase_config';
+import { auth, db } from '../../firebase_config';
 
-function Setor({nomeSetor, setorId = '', visibility = ''}) {
+function Setor({nomeSetor, setorId = '', visibility = '', responsaveis = []}) {
 
     const [setorViewState, setSetorViewState] = useState('none')
     const [setorIconState, setSetorIconState] = useState('add')
@@ -23,10 +23,10 @@ function Setor({nomeSetor, setorId = '', visibility = ''}) {
             setSetorViewState('')
             setSetorIconState('remove')
 
-            if(searchState == 0){
-                getCardsData()
-                setSearchState(1)
-            }
+            getCardsData()
+            // if(searchState == 0){
+                // setSearchState(1)
+            // }
         }else{
             setSetorViewState('none')
             setSetorIconState('add')
@@ -48,6 +48,8 @@ function Setor({nomeSetor, setorId = '', visibility = ''}) {
                 console.log(doc.id, " => ", doc.data());
                 var val = doc.data()
                 var data = val.data.toDate().toLocaleDateString() + ' ' + val.data.toDate().toLocaleTimeString();
+                
+                let admin = auth.currentUser.uid == val.responsavel || (responsaveis.indexOf(auth.currentUser.uid) > -1) ? true : false
 
                 card.push({
                     key:doc.id ,
@@ -56,9 +58,11 @@ function Setor({nomeSetor, setorId = '', visibility = ''}) {
                     setorId: val.setorId ,
                     data:val.data,
                     data_registro:val.data_registro,
-                    nome:val.nome,
+                    nome:val.ocupacao,
                     data_str:data,
                     confirm:val.confirm,
+                    admin:admin,
+                    setorStr:nomeSetor
                 })
             });
             
@@ -93,6 +97,12 @@ function Setor({nomeSetor, setorId = '', visibility = ''}) {
                     nome={item.usuario}
                     informacao={ "Ocupação: "+item.nome+" \nData: "+ item.data_str }
                     confirmacao={item.confirm}
+                    escalaId={item.key}
+                    admin={item.admin}
+                    setorStr={item.setorStr}
+                    ocupacaoStr={item.nome}
+                    voluntarioStr={item.usuario}
+                    dateP={item.data.toDate()}
                 />
               ))}
         </View>
