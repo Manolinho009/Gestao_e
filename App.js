@@ -9,6 +9,7 @@ import HomeScreen from './screens/HomeScreen';
 import FloatButton from './components/fab';
 import { useState } from 'react';
 import EscalaScreen from './screens/create_edit/EscalaScreen';
+import UserAdmScreen from './screens/UserAdmScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,13 @@ export default function App() {
         }
          )}
           name="CreateEscala" component={EscalaScreen} />
+        <Stack.Screen 
+         options={({ navigation, route }) => ({
+          headerTitle: 'Gerenciar Usuarios',
+          headerBackButtonMenuEnabled:false,    
+        }
+         )}
+          name="UserAdm" component={UserAdmScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

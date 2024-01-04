@@ -17,7 +17,10 @@ function FloatButton() {
   function goCreateEscala(){
       navigation.navigate("CreateEscala")
   }
-
+  
+  function goUserAdm(){
+      navigation.navigate("UserAdm")
+  }
   
   function togleMenuState() {
     if(menuState == 'none'){
@@ -34,7 +37,10 @@ function FloatButton() {
             <Ionicons style={stylesFab.title} name="add-circle" size={35} color="black" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={[stylesFab.container,{bottom: 160,paddingHorizontal: 10, paddingVertical: 10,right:25}]}> 
+        <TouchableOpacity 
+          onPress={goUserAdm}
+          style={[stylesFab.container,{bottom: 160,paddingHorizontal: 10, paddingVertical: 10,right:25}]}
+        > 
             <Ionicons style={stylesFab.title} name="person-add" size={35} color="black" />
         </TouchableOpacity>
 

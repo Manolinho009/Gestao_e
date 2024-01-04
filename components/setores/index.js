@@ -1,9 +1,9 @@
-import { View, Text, Pressable } from 'react-native'
+import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
-import { styles,shadow, secondary } from '../../src/styles'
+import { styles,shadow, secondary, primary, light, dark } from '../../src/styles'
 import CardHome from '../card';
 
 
@@ -18,6 +18,10 @@ function Setor({nomeSetor, setorId = '', visibility = '', responsaveis = []}) {
     const [searchState, setSearchState] = useState(0)
     const [cards, setCards] = useState([])
     
+    const [loadingStatus, setLoadingStatus] = useState(true)
+    const [cardsStatus, setCardsStatus] = useState(true)
+
+
     function togleSector() {
         if(setorViewState == 'none'){
             setSetorViewState('')
@@ -36,6 +40,8 @@ function Setor({nomeSetor, setorId = '', visibility = '', responsaveis = []}) {
     
 
     function getCardsData(){
+        
+        setLoadingStatus(true)
 
         var card = []
         var hoje = new Date()
@@ -65,9 +71,18 @@ function Setor({nomeSetor, setorId = '', visibility = '', responsaveis = []}) {
                     setorStr:nomeSetor
                 })
             });
-            
-            setCards(card);
 
+            if(card.length <= 0){
+                setCardsStatus(true)
+            }else{
+                setCardsStatus(false)
+            }
+
+            setCards(card);
+            
+            console.log(card);
+
+            setLoadingStatus(false)
         }).catch((err)=>{
           console.log(err);
         })
@@ -88,8 +103,11 @@ function Setor({nomeSetor, setorId = '', visibility = '', responsaveis = []}) {
             </Pressable>
         </View>
         <View style={{display: setorViewState}}>
+            <ActivityIndicator style={{alignSelf:'center', display: loadingStatus ? '' : 'none' }}  size="small" color={primary} />
 
-
+            <View style={[styles.containerFlex,{display: cardsStatus ? '' : 'none' ,height:30,backgroundColor:'#00000096', justifyContent:'center', borderRadius:30}]}>
+                <Text style={{alignSelf:'center', justifyContent:'center', color: light, opacity:1}}>Sem Escalas</Text>
+            </View>
 
             {cards.map((item, index) => (
                 <CardHome

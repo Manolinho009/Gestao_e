@@ -1,10 +1,10 @@
-import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, TouchableOpacity } from 'react-native'
+import { Text, StyleSheet, View, ScrollView, Pressable, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { Component, useEffect, useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { styles, dark, light, shadow } from '../src/styles'
+import { styles, dark, light, shadow, primary } from '../src/styles'
 import CardHome from '../components/card'
 
 import {Picker} from '@react-native-picker/picker';
@@ -19,9 +19,15 @@ import userClass, { getUser } from '../src/userClass';
 
 const HomeScreen = () => {
 
+
+    const [userData, setUserData] = useState({});
+
     const [selectedSetor, setSelectedSetor] = useState('*');
 
+    const [loadingStatus, setLoadingStatus] = useState(true)
 
+    const [setoresFilterStatus, setSetoresFilterStatus] = useState(false)
+    const [setoresFilter, setSetoresFilter] = useState([])
     const [setores, setSetores] = useState([])
 
     const [menuViewState, setMenuViewState] = useState('none')
@@ -38,24 +44,34 @@ const HomeScreen = () => {
         }
     }
 
-    function getSetoresData() {
+    function getSetoresData(user = null) {
+        setLoadingStatus(true)
+        let uservar
+        if(user){
+            uservar = user
+        }else{
+            uservar = userData
+        }
+        
+        
         var setores = []
-
         let q 
         if(selectedSetor != '*'){
             getDoc(doc(db, 'setores',selectedSetor)).then((doc)=>{
                 console.log(doc.id, " => ", doc.data());
                 var val = doc.data()
-
+               
                 setores.push({
                     key:doc.id ,
                     setorId:doc.id, 
                     setor: val.setor,
                     responsaveis: val.responsaveis
                 })
-                
+              
                 setSetores(setores);
     
+
+                setLoadingStatus(false)
             }).catch((err)=>{
               console.log(err);
             })
@@ -68,10 +84,14 @@ const HomeScreen = () => {
                 a.forEach((doc) => {
     
                     console.log(doc.id, " => ", doc.data());
-                    var val = doc.data()
-                    let admin = (val.responsaveis.indexOf(auth.currentUser.uid) > -1) ? true : false
 
-                    if(admin){
+                    var val = doc.data()
+
+                    let setorAuth = (uservar.setores.indexOf(doc.id) > -1) ? true : false
+
+                    let admin = (val.responsaveis.indexOf(auth.currentUser.uid) > -1) ? true : false
+                    console.log('TRU OU FAL ',setorAuth, ' a ',admin);
+                    if(admin || setorAuth){
                         setores.push({
                             key:doc.id ,
                             setorId:doc.id, 
@@ -82,7 +102,13 @@ const HomeScreen = () => {
                 });
                 
                 setSetores(setores);
-    
+                
+                if(!setoresFilterStatus){
+                    setSetoresFilter(setores);
+                    setSetoresFilterStatus(true);
+                }
+                
+                setLoadingStatus(false)
             }).catch((err)=>{
               console.log(err);
             })
@@ -93,8 +119,10 @@ const HomeScreen = () => {
 
 
     useEffect(() => {
-        getSetoresData()
-        getUser().then((a) => {console.log('aaaaaaaa',a);})
+        getUser().then((a) => {
+            setUserData(a);
+            getSetoresData(a);
+        })
     }, [])
 
     return (
@@ -128,7 +156,7 @@ const HomeScreen = () => {
                                 setSelectedSetor(itemValue)
                             }>
                             <Picker.Item style={{fontSize:12}} label="Todos" value="*" />
-                            {setores.map((item, index) => (
+                            {setoresFilter.map((item, index) => (
                                 <Picker.Item style={{fontSize:12}} key={item.key+"_picker"} label={item.setor} value={item.setorId} />
                             ))}
                         </Picker>
@@ -139,7 +167,7 @@ const HomeScreen = () => {
                     >
                         <TouchableOpacity
                             style={[styles.buttonSuccess, {padding:15, flexDirection:'row'}]}
-                            onPress={getSetoresData}
+                            onPress={() => {getSetoresData()}}
                         >
                             <Text style={{color: light}}>
                                 Pesquisar
@@ -152,6 +180,9 @@ const HomeScreen = () => {
 
 
             <View style={[styles.containerFlex, {marginTop:50}]}>
+                <ActivityIndicator style={{alignSelf:'flex-start', display: loadingStatus ? '' : 'none' }}  size="large" color={primary} />
+            
+
                 <View style={[styles.containerFlex]}>
                     {setores.map((item, index) => (
                         <Setor

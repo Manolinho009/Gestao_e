@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert, Modal } from 'react-native'
+import { View, Text, TouchableOpacity, Alert, Modal, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native'
@@ -8,13 +8,68 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { styles,shadow, secondary, light, secondary_shadow, primary, danger, grey } from '../../src/styles'
 import { db } from '../../firebase_config';
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, updateDoc, where } from 'firebase/firestore';
 import { Picker } from '@react-native-picker/picker';
+import { query } from 'firebase/database';
+
+
+function CardBadge ({value, color = 'grey' , adm = 0}){
+
+  let final
+  switch (adm) {
+    case  0:
+    final = (
+        <View style={{backgroundColor:grey, padding:5, borderRadius:5, marginVertical: 3}}>
+          <Text style={[styles.cardBody.text, {color: shadow}] }>{value}</Text>
+        </View>
+      )
+      
+      break;
+    case  1:
+
+    final = (
+        <View style={{backgroundColor:primary, padding:5, borderRadius:5, marginVertical: 3}}>
+          <Text style={[styles.cardBody.text, {color: light}] }>{value}</Text>
+        </View>
+      )
+      
+      break;
+    case 2:
+
+    final = (
+        <View style={{backgroundColor:secondary, padding:5, borderRadius:5, marginVertical: 3}}>
+          <Text style={[styles.cardBody.text, {color: shadow}] }>{value}</Text>
+        </View>
+      )
+      
+      break;
+    case 3:
+
+    final = (
+        <View style={{backgroundColor:shadow, padding:5, borderRadius:5, marginVertical: 3}}>
+          <Text style={[styles.cardBody.text, {color: light}] }>{value}</Text>
+        </View>
+      )
+      
+      break;
+      
+      default:
+        final = (
+          <View style={{backgroundColor:grey, padding:5, borderRadius:5, marginVertical: 3}}>
+            <Text style={[styles.cardBody.text, {color: shadow}] }>{value}</Text>
+          </View>
+        )
+      break;
+
+    }
+    
+    return final;
+}
 
 
 
 
-function CardHome({nome, informacao, confirmacao = 1, escalaId = '', admin = false, setorStr= '', ocupacaoStr = '', voluntarioStr = '', dateP = null }) {
+function CardHome({nome, informacao, confirmacao = 1, escalaId = '', admin = false, setorStr= '', ocupacaoStr = '', voluntarioStr = '', dateP = null, escalas = 1 }) {
   const [openDropDown, setOpenDropDown] = useState('none');
   const [openDropDownAdmin, setOpenDropDownAdmin] = useState('none');
   
@@ -407,5 +462,389 @@ function CardHome({nome, informacao, confirmacao = 1, escalaId = '', admin = fal
 }
 
 
+export function CardUser({nome, admin = false, setores = {}, userId = '', setoresFilter = [] }) {
+  
+  const [openDropDown, setOpenDropDown] = useState('none');
+  
+  const [confimState, setConfirmState] = useState(false)
+  const [deleteIconState, setDeleteIconState] = useState(false)
+  
+  const [confirmIconState, setConfirmIconState] = useState('person')
+  
+  const [modalVisible, setModalVisible] = useState(false);
+  const [date, setDate] = useState(new Date());
+  
+  const [setoresList, setSetoresList] = useState([])
+  
+  const [selectedAcesso, setSelectedAcesso] = useState(0);
+  const [selectedSetor, setSelectedSetor] = useState('*');
+  // const [setoresFilter, setSetoresFilter] = useState([])
+
+  const navigation = useNavigation()
+
+  function goHome(){
+      navigation.navigate("Home")
+    }
+
+
+    const showMode = (currentMode) => {
+      setShow(true);
+      setMode(currentMode);
+    };
+
+  
+  function togleModal(state) {
+      setModalVisible(state)
+      if(!state){
+        setEditState(false)
+        setUsuario('')
+        setOcupacao('')
+        setDate(new Date())
+      }
+    }
+
+
+  function dropdownTogle() {
+
+    if(openDropDown == 'none'){
+      setOpenDropDown('')
+      setDeleteIconState(true)
+    }else{
+      setDeleteIconState(false)
+      setOpenDropDown('none')
+    }
+  }
+
+  
+  function saveUserParams() {
+
+    function runUpdateUser() {
+      let q = query(collection(db, "usuarios"), where('userId', '==', userId));
+
+      getDocs(q).then((a) => {
+        let setores
+        let idDoc
+
+        a.forEach((doc) => {
+          console.log(doc.data());
+
+          setores = doc.data().setores
+          idDoc = doc.id
+  
+        });
+
+        if(!(setores.indexOf(selectedSetor) > -1)){
+            
+            setores.push(selectedSetor)
+        
+            updateDoc(doc(db,'usuarios',idDoc), {
+              setores: setores,
+            }).then(()=>{
+              console.log("OK");
+            }).catch((err) => {
+              console.log('Deu Erro');
+            }) 
+        }else{
+          console.log('ja cadastrado');  
+        }
+      })
+    }
+
+    function runUpdateAdm() {
+        // dropdownTogle()
+
+        getDoc(doc(db,'setores',selectedSetor)).then((a) => {
+
+          console.log(a.data());
+          let responsaveis = a.data().responsaveis
+          
+          console.log(responsaveis);
+          console.log(userId);
+
+          if(!(responsaveis.indexOf(userId) > -1)){
+              
+            responsaveis.push(userId)
+          
+              updateDoc(doc(db,'setores',selectedSetor), {
+                responsaveis: responsaveis,
+              }).then(()=>{
+                console.log("OK");
+              }).catch((err) => {
+                console.log('Deu Erro');
+              }) 
+          }else{
+            console.log('ja cadastrado');  
+          }
+
+        })
+
+    }
+
+    console.log(selectedSetor, selectedAcesso, userId);
+
+    if(selectedAcesso == 0){
+      runUpdateUser()
+    }
+    else if(selectedAcesso == 1){
+      runUpdateUser()
+      runUpdateAdm()
+    }
+
+    
+    navigation.navigate("Home")
+    navigation.navigate("UserAdm")
+
+  }
+
+  // function confirmEscala() {
+  //   function runUpdate(confimVal) {
+  //     console.log(confimVal);
+  //       dropdownTogle()
+  
+  //       updateDoc(doc(db,'escalas',escalaId), {
+  //         confirm: confimVal,
+  //       }).then(()=>{
+  //         confirmacao = confimVal
+  //         goHome()
+  //       }).catch((err) => {
+    
+  //         // console.log('Deu Erro');
+  //       }) 
+  //   }
+
+
+    
+  //   Alert.alert('Confirmação','Deseja Confirmar a Escala ? ', [
+  //     {
+  //       text: 'Cancel',
+  //       onPress: () => {setConfirmState(false)},
+  //       style: 'cancel',
+  //     },
+  //     {text: 'OK', onPress: () => {setConfirmState(true), runUpdate(1)}},
+  //     {text: 'Notificar', onPress: () => {setConfirmState(true), setConfirmValue(2), runUpdate(2)}},
+  //   ])
+  // }
+
+
+  useEffect(() =>{
+    
+    if(admin){
+      setConfirmIconState('briefcase')
+    }else{
+      setConfirmIconState('person')
+    }
+
+  })
+
+  function removeSetor(setorId, adm) {
+    console.log(setorId);
+    console.log(adm);
+
+    function removeAdm() {
+        getDoc(doc(db,'setores',setorId)).then((a) => {
+
+          console.log(a.data());
+          let responsaveis = a.data().responsaveis
+          
+          console.log(responsaveis);
+          
+          let index = responsaveis.indexOf(userId)
+
+          if(index > -1){
+              responsaveis.splice(index, 1); 
+
+              console.log(responsaveis);
+
+              updateDoc(doc(db,'setores',setorId), {
+                responsaveis: responsaveis,
+              }).then(()=>{
+                console.log("OK");
+              }).catch((err) => {
+                console.log('Deu Erro');
+              }) 
+          }else{
+            console.log('ja cadastrado');  
+          }
+
+        })
+    }
+    function removeSetor() {
+      console.log(userId);
+        let q = query(collection(db, "usuarios"), where('userId', '==', userId));
+
+        getDocs(q).then((a) => {
+          let setores
+          let idDoc
+
+          a.forEach((doc) => {
+            console.log(doc.data());
+
+            setores = doc.data().setores
+            idDoc = doc.id
+    
+          });
+          
+          let index = setores.indexOf(setorId)
+          
+          console.log(setores);
+          console.log('asasasasasas',setoresList);
+          
+          
+          
+          let setoresListTmp = setoresList
+
+          if(index > -1){
+            
+            setores.splice(index, 1); 
+
+              // console.log(setoresListTmp);
+              // var result = setoresListTmp.find(t=>t.setorId === setorId);
+              // setoresListTmp.splice(setoresListTmp.indexOf(result), 1); 
+              // console.log(setoresListTmp);
+              
+              // setSetoresList(setoresListTmp)
+
+              updateDoc(doc(db,'usuarios',idDoc), {
+                setores: setores,
+              }).then(()=>{
+                console.log("OK");
+              }).catch((err) => {
+                console.log('Deu Erro');
+              }) 
+
+          }else{
+            console.log('ja cadastrado');  
+          }
+        })
+    }
+    
+    if(adm == 1){
+      removeAdm()
+      removeSetor()
+      
+    } 
+    else if(adm == 0 ){
+      removeSetor()
+
+    }
+
+    navigation.navigate("Home")
+    navigation.navigate("UserAdm")
+  }
+
+
+  useEffect(() =>{
+    setSetoresList(setores)
+    // setSetoresFilter(setores)
+  },[])
+
+
+  return (
+    
+
+
+    <TouchableOpacity 
+      onPress={dropdownTogle}
+      style={styles.cardContainer}
+    >
+
+    <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.');
+            togleModal(!modalVisible);
+          }}>
+      
+      <View style={[styles.containerFlex, {marginTop:50, height:'100%'}]}>
+          <View style={[styles.containerFlex,{height:'100%'}]}>
+              
+              <Text>aaaa</Text>
+          </View>
+      </View>
+      </Modal>
+
+
+
+      <View style={[{flexDirection:'row', justifyContent:'space-between'}]}>
+        <View style={[styles.cardHeader, {justifyContent:'center'}]}>
+              <Text>{nome}</Text>
+        </View>
+        <View style={[styles.cardBody]}>
+          {setoresList.map((a,index) => (
+            <View>
+              <TouchableOpacity 
+                onPress={() => {
+                  removeSetor(a.setorId,a.adm)
+                }}
+                style={{display: !deleteIconState ? 'none' : '' ,position:'absolute', zIndex:100, end:0, top:0}}
+              
+              >
+                <Ionicons  name="close-circle" size={24} color={danger} />
+              </TouchableOpacity>
+              <View style={{position:'relative', marginHorizontal:15, marginVertical:5}}>
+                <CardBadge key={a.setorId} value={a.nome} adm={a.adm}/> 
+              </View>
+            </View>
+          ))}
+        </View>
+        <View style={[styles.cardFooter,{justifyContent:'center'}]}>
+          <View>
+            <Ionicons style={styles.cardFooter.text} name={confirmIconState} size={32}/>
+          </View>
+        </View>
+      </View>
+      <View 
+        style={[{display:openDropDown, padding:10 }]}
+      >
+      <View style={{flexDirection:'row', justifyContent:'center', alignContent:'space-around'}}>
+
+        <Picker
+            style={[{
+                color:shadow,
+                borderColor:shadow,
+                borderWidth:1,
+                width:'45%',
+                borderRadius:5
+            }]}
+            selectedValue={selectedSetor}
+            onValueChange={(itemValue, itemIndex) =>
+                setSelectedSetor(itemValue)
+            }>
+            <Picker.Item style={{fontSize:12}} label="Todos" value="*" />
+            {setoresFilter.map((item, index) => (
+                <Picker.Item style={{fontSize:12}} key={item.setorId+"_picker"} label={item.setor} value={item.setorId} />
+            ))}
+        </Picker>
+        <Picker
+            style={[{
+                color:shadow,
+                borderColor:shadow,
+                borderWidth:1,
+                width:'45%',
+                borderRadius:5
+            }]}
+            selectedValue={selectedAcesso}
+            onValueChange={(itemValue, itemIndex) =>
+              setSelectedAcesso(itemValue)
+            }>
+            <Picker.Item key={userId+'volunt1'} style={{fontSize:12}} label="Voluntario" value={0} />
+            <Picker.Item key={userId+'adm1'} style={{fontSize:12}} label="Admin" value={1} />
+        </Picker>
+      </View>
+        <TouchableOpacity
+          onPress={saveUserParams}
+          disabled={confimState}
+        >
+          <View style={[styles.cardContainer, {opacity: !confimState  ? 1 : 0.5 , padding:10, backgroundColor: primary,}]}>
+            <Text style={{color:light}}>Confirmar</Text>
+          </View>
+        </TouchableOpacity>
+
+      </View>
+    </TouchableOpacity>
+  )
+}
 
 export default CardHome

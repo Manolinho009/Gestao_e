@@ -11,6 +11,7 @@ import {Picker} from '@react-native-picker/picker';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { auth, db } from '../../firebase_config';
+import { getUser } from '../../src/userClass';
 
 const EscalaScreen  = ({
 }) => {
@@ -23,6 +24,9 @@ const EscalaScreen  = ({
     const [ocupacoes, setOcupacoes] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
   
+    
+    const [userData, setUserData] = useState({});
+
     const [menuViewState, setMenuViewState] = useState('none')
     const [menuViewIcon, setMenuViewIcon] = useState('add-circle')
   
@@ -79,22 +83,39 @@ const EscalaScreen  = ({
             })
     }
 
-    function listAllSetores() {
-        let setoresTmp = []
+    function listAllSetores(user) {
+        let setoresTmp = [] 
+        let uservar
+        if(user){
+            uservar = user
+        }else{
+            uservar = userData
+        }
+        
         
         q = query(collection(db, "setores"));
             
             getDocs(q).then((a)=>{
                 a.forEach((doc) => {
-    
                     console.log(doc.id, " => ", doc.data());
-                    var val = doc.data();
-                    setoresTmp.push({
-                        key:doc.id,
-                        setorId:doc.id,
-                        setor:val.setor,
-                        responsaveis:val.responsaveis
-                    })
+
+                    var val = doc.data()
+
+                    let setorAuth = (uservar.setores.indexOf(doc.id) > -1) ? true : false
+
+                    let admin = (val.responsaveis.indexOf(auth.currentUser.uid) > -1) ? true : false
+
+                    console.log('TRU OU FAL ',setorAuth, ' a ',admin);
+
+                    if(admin || setorAuth){
+                        setoresTmp.push({
+                            key:doc.id,
+                            setorId:doc.id,
+                            setor:val.setor,
+                            responsaveis:val.responsaveis
+                        })
+                    }
+                    
 
                 });
 
@@ -187,7 +208,10 @@ const EscalaScreen  = ({
       
 
       useEffect(() => {
-        listAllSetores()
+        getUser().then((a) => {
+            setUserData(a);
+            listAllSetores(a)
+        })
       },[])
   
       function convetDate(d){

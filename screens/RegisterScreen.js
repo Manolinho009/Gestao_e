@@ -6,6 +6,7 @@ import { styles } from '../src/styles'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth, db } from '../firebase_config'
 import { addDoc, collection } from 'firebase/firestore'
+import { storeUser } from '../src/userClass'
 
 
 
@@ -52,6 +53,9 @@ const RegisterScreen  = () => {
                     userId: user.uid,
                 }).then(() => {
                   console.log('Deu Bomm');
+                  
+                  storeUser(JSON.stringify(user))
+
                 }).catch((err) => {
                   // console.log(err);
                 });

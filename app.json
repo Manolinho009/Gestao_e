@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Gestao_e",
-    "slug": "Gestao_e",
+    "slug": "gestao-e",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,10 +21,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.thiago9098.gestaoe"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e02eb042-11a6-4968-b778-5b2d69d58808"
+      }
+    },
+    "owner": "thiago9098"
   }
 }
